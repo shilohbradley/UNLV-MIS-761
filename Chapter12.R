@@ -10,11 +10,8 @@ library(pastecs)
 library(reshape)
 library(WRS)
 
-## Set working directory -----
-setwd("C:/Users/Shilerz/Desktop/MIS 761/")
-
 ## Load data -----
-df <- read.csv("goggles.csv", header = TRUE)
+df <- read.csv(here("~/UNLV-MIS-761/goggles.csv"), header = TRUE)
 
 ## Manipulate data -----
 df$alcohol <- factor(df$alcohol, levels = c("None", "2 Pints", "4 Pints"))

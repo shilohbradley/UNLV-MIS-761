@@ -20,7 +20,7 @@ library(reshape)
 library(WRS)
 
 ## Read in data -----
-df <- read.delim(here("~/Documents/GitHub/UNLV-MIS-761/Bushtucker.dat"), header = TRUE)
+df <- read.delim(here("~/UNLV-MIS-761/Bushtucker.dat"), header = TRUE)
 
 ## Manipulate data -----
 longBush <- melt(df, id = "participant", measured = c("stick_insect", "kangaroo_testicle", "fish_eye", "witchetty_grub"))
