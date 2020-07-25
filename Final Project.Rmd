@@ -23,6 +23,23 @@ names(df)
 summary(df)
 ```
 
+```{r color_analysis}
+# Question: Does one color have an advantage over the other? Does it change with gender?
+
+# Get the data
+color <- df[,c('Winner', 'gender')]
+
+# Plot the graph
+color.hist <- ggplot(color, aes(x = Winner))
+color.hist +
+  geom_histogram(stat = 'count', fill = c('Blue', 'Red'))
+
+
+# Test of significance ?
+
+```
+
+
 ```{r reach_analysis}
 # Question: Does the fighter with the longer reach win more frequently?
 
