@@ -35,10 +35,13 @@ str(df)
 
 ```{r}
 ggplot(df, aes(x = gender, fill = Winner)) +
-  geom_bar()
+  geom_bar() +
+  scale_fill_manual(values = c("blue", "red"))
 ```
-```{r}
+```{r Win Percentages}
 df %>%
   select(gender, Winner) %>%
-  dplyr::summarise(`% Win` = n())
+  group_by(gender, Winner) %>%
+  dplyr::summarise(`# of Wins` = n()) %>%
+  ungroup()
 ```
