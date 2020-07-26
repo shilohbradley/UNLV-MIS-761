@@ -20,6 +20,7 @@ library(WRS)
 
 ## Function definitions -----
 omega_factorial <- function(n, a, b, SSa, SSb, SSab, SSr) {
+  
     MSa <- SSa / (a - 1)
     MSb <- SSb / (b - 1)
     MSab <- SSab / ((a - 1) * (b - 1))

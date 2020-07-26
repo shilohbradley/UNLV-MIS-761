@@ -147,9 +147,9 @@ pairwise.t.test(df_long$attitude, df_long$groups, paired = TRUE, p.adjust.method
 baseline <- lme(attitude ~ 1, random = ~1|participant/drink/imagery, data = df_long, method = "ML")
 baseline <- lme(attitude ~ drink, random = ~1|participant/drink/imagery, data = df_long, method = "ML")
 
-drink_model <- update(baseline, .~., + drink)
-imagery_model <- update(drink_model, .~., + imagery)
-attitude_model <- update(imagery_model, .~., + drink:imagery)
+drink_model <- update(baseline, .~. + drink)
+imagery_model <- update(drink_model, .~. + imagery)
+attitude_model <- update(imagery_model, .~. + drink:imagery)
 
 anova(base_line, drink_model, imagery_model, attitude_model)
 
