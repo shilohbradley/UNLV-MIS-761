@@ -10,6 +10,170 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(ggplot2)
+# library(here)
+```
+
+```{r load_data}
+df <- read.csv('ufc-master.csv')
+
+head(df)
+
+names(df)
+
+summary(df)
+```
+
+```{r color_analysis}
+# Question: Does one color have an advantage over the other? Does it change with gender?
+
+# Get the data
+color <- df[,c('Winner', 'gender')]
+
+# Plot the graph
+color.hist <- ggplot(color, aes(x = Winner))
+color.hist +
+  geom_histogram(stat = 'count', fill = c('Blue', 'Red'))
+
+
+# Test of significance ?
+
+```
+
+
+```{r reach_analysis}
+# Question: Does the fighter with the longer reach win more frequently?
+
+# Create a smaller data frame
+reach <- df[,c('Winner', 'B_Reach_cms', 'R_Reach_cms')]
+
+# Calculate the difference in reach (positive = blue advantage)
+reach$Diff <- reach$B_Reach_cms - reach$R_Reach_cms
+
+# There is an outlier that makes no sense, so remove it
+reach <- reach[reach$Diff > -50,]
+
+# Remove all cases where the players had equal reach
+reach <- subset(reach, !(Diff == 0))
+
+# Identify the fighter with the longer reach
+reach$Advantage <-
+  case_when(
+    reach$Diff > 0 ~ 'Blue',
+    reach$Diff < 0 ~ 'Red'
+  )
+
+# Identify if the advantaged fighter won
+reach$AdWin <-
+  case_when(
+    reach$Advantage == reach$Winner ~ 'Win',
+    reach$Advantage != reach$Winner ~ 'Lose'
+  )
+
+reach$AdWin <- as.factor(reach$AdWin)
+
+# Take the absolute value of the difference
+reach$AbsDiff <- abs(reach$Diff)
+
+# Plot the data
+reach.hist <- ggplot(reach, aes(x = AbsDiff))
+reach.hist +
+  geom_histogram(binwidth = 2) +
+  facet_wrap(~ AdWin, ncol = 1)
+
+# Create the logistic regression
+reach.model <- glm(AdWin ~ AbsDiff, data = reach, family = binomial())
+
+# Display summary
+summary(reach.model)
+
+```
+
+```{r reach_gender_analysis}
+# Question: Does gender impact whether the fighter with the longer reach will win more frequently?
+
+# Create a smaller data frame
+reach_gender <- df[,c('Winner', 'gender', 'B_Reach_cms', 'R_Reach_cms')]
+
+# Convert gender into levels
+reach_gender$gender <- as.factor(reach_gender$gender)
+
+# Calculate the difference in reach (positive = blue advantage)
+reach_gender$Diff <- reach_gender$B_Reach_cms - reach_gender$R_Reach_cms
+
+# There is an outlier that makes no sense, so remove it
+reach_gender <- reach_gender[reach_gender$Diff > -50,]
+
+# There is an outlier that makes no sense, so remove it
+reach_gender <- reach_gender[reach$Diff > -50,]
+
+# Remove all cases where the players had equal reach
+reach_gender <- subset(reach_gender, !(Diff == 0))
+
+# Identify the fighter with the longer reach
+reach_gender$Advantage <-
+  case_when(
+    reach_gender$Diff > 0 ~ 'Blue',
+    reach_gender$Diff < 0 ~ 'Red'
+  )
+
+# Identify if the advantaged fighter won
+reach_gender$AdWin <-
+  case_when(
+    reach_gender$Advantage == reach_gender$Winner ~ 'Win',
+    reach_gender$Advantage != reach_gender$Winner ~ 'Lose'
+  )
+
+reach_gender$AdWin <- as.factor(reach_gender$AdWin)
+
+# Take the absolute value of the difference
+reach_gender$AbsDiff <- abs(reach_gender$Diff)
+
+# Plot the data
+reach_gender.hist <- ggplot(reach_gender, aes(x = AbsDiff, color = gender))
+reach_gender.hist +
+  geom_histogram(binwidth = 2, aes(fill = gender)) +
+  facet_grid(AdWin ~ gender)
+
+# Create the logistic regression
+diff.model <- glm(AdWin ~ AbsDiff, data = reach_gender, family = binomial())
+reach_gender.model <- update(diff.model, .~. + gender)
+
+# Display summary
+summary(diff.model)
+summary(reach_gender.model)
+anova(diff.model, reach_gender.model)
+
+
+```
+
+```{r}
+```
+
+```{r}
+str(df)
+```
+
+```{r}
+ggplot(df, aes(x = gender, fill = Winner)) +
+  geom_bar()
+```
+```{r}
+df %>%
+  select(gender, Winner) %>%
+  dplyr::summarise(`% Win` = n())
+=======
+---
+title: "UFC Statistics"
+author: "Team #5"
+date: "7/24/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
 library(here)
 ```
 
