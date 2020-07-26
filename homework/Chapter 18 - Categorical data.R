@@ -12,8 +12,6 @@
 library(gmodels)
 library(MASS)
 
-## Function definitions -----
-
 ## Read in data -----
 df <- read.delim("~/UNLV-MIS-761/data/cats.dat", header = TRUE)
 
