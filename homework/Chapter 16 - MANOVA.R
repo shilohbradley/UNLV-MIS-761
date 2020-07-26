@@ -18,13 +18,13 @@ library(pastecs)
 library(reshape)
 library(WRS)
 
-## Function definitions -----
-
 ## Read in data -----
 df <- read.delim("~/UNLV-MIS-761/data/OCD.dat", header = TRUE)
 
 ## Manipulate the data -----
-df$Group <- factor(df$Group, levels = c("CBT", "BT", "No Treatment Control", labels = c("CBT", "BT", "NT")))
+df$Group <- factor(df$Group, 
+                   levels = c("CBT", "BT", "No Treatment Control", 
+                              labels = c("CBT", "BT", "NT")))
 
 ## Exploring the data -----
 ggplot(df, aes(x = Actions, y = Thoughts)) +
@@ -68,7 +68,8 @@ contrasts(df$Group) <- cbind(CBT_vs_NT, BT_vs_NT)
 
 ## Build the model -----
 ## manova() general form
-## newModel <- manova(outcome ~ predictor(s), data = dataFrame, na.action = an action)
+## newModel <- manova(outcome ~ predictor(s), data = dataFrame, 
+##                    na.action = an action)
 
 outcome <- cbind(df$Actions, df$Thoughts)
 
@@ -106,7 +107,8 @@ mulrank(3, 2, df_robust)
 cmanova(3, 2, df_robust)
 
 ## lda() general form
-## newModel <- lda(Group ~ Predictor(s), data = dataFrame, prior = prior probabilities, na.action = "na.omit")
+## newModel <- lda(Group ~ Predictor(s), data = dataFrame, 
+##                 prior = prior probabilities, na.action = "na.omit")
 
 lda_model <- lda(Group ~ Actions + Thoughts, data = df)
 lda_model

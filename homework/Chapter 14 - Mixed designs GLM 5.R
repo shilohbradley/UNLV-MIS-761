@@ -36,8 +36,9 @@ df <- read.delim("~/UNLV-MIS-761/data/LooksOrPersonality.dat", header = TRUE)
 
 ## Manipulate data -----
 df_speed <- melt(df, id = c("participant","gender"), 
-                 measured = c("att_high", "av_high", "ug_high", "att_some", 
-                              "av_some", "ug_some", "att_none", "av_none", "ug_none"))
+                 measured = c("att_high", "av_high", "ug_high", 
+                              "att_some", "av_some", "ug_some", 
+                              "att_none", "av_none", "ug_none"))
 
 names(df_speed) <- c("participant", "gender", "groups", "dateRating")
 
@@ -46,7 +47,8 @@ df_speed$looks <- gl(3, 20, 180, labels = c("Attractive", "Average", "Ugly"))
 
 df_speed <- df_speed[order(df_speed$participant), ]
 
-by(speedData$dateRating, list(speedData$looks, speedData$personality), stat.desc, basic = FALSE)
+by(speedData$dateRating, list(speedData$looks, speedData$personality), 
+   stat.desc, basic = FALSE)
 
 ## Choosing contrasts -----
 SomevsNone <- c(1, 1, -2)
@@ -115,10 +117,13 @@ df <- read.delim("~/UNLV-MIS-761/data/ProfilePicture.dat", header = TRUE)
 names(df) <- c("case", "relationship_status", "With Man", "Alone")
 df$row <- c(1:17, 1:23)
 
-df_melt <- melt(df, id = c("case", "row", "relationship_status"), measured = c("couple", "alone"))
-names(df_melt) <- c("case", "row", "relationship_status", "profile_picture", "friend_requests")
+df_melt <- melt(df, id = c("case", "row", "relationship_status"), 
+                measured = c("couple", "alone"))
+names(df_melt) <- c("case", "row", "relationship_status", 
+                    "profile_picture", "friend_requests")
 
-df <- cast(df_melt, row ~ relationship_status + profile_picture, value = "friend_requests")
+df <- cast(df_melt, row ~ relationship_status + profile_picture, 
+           value = "friend_requests")
 df$row <- NULL
 df
 

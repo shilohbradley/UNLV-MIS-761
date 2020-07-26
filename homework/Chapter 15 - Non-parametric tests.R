@@ -30,8 +30,10 @@ df <- read.delim("~/UNLV-MIS-761/data/Drug.dat", header = TRUE)
 ##################################################
 
 ## wilcox.text() general form
-## newModel <- wilcox.test(outcome ~ predictor, data = dataFrame, paired = FALSE / TRUE)
-## newModel <- wilcox.test(scores group 1, scores group 2, paired = FALSE / TRUE)
+## newModel <- wilcox.test(outcome ~ predictor, data = dataFrame, 
+##                         paired = FALSE / TRUE)
+## newModel <- wilcox.test(scores group 1, scores group 2, 
+##                         paired = FALSE / TRUE)
 
 ## Basic tests -----
 sun_model <- wilcox.test(sundayBDI ~ drug, data = df)
@@ -42,10 +44,12 @@ wed_model
 
 ## To use a normal approximation rather than an exact p
 ## and to get rid of the continuity correction
-sun_model <- wilcox.test(sundayBDI ~ drug, data = df, exact = FALSE, correct = FALSE)
+sun_model <- wilcox.test(sundayBDI ~ drug, data = df, exact = FALSE, 
+                         correct = FALSE)
 sun_model
 
-wed_model <- wilcox.test(wedsBDI ~ drug, data = df, exact = FALSE, correct = FALSE)
+wed_model <- wilcox.test(wedsBDI ~ drug, data = df, exact = FALSE, 
+                         correct = FALSE)
 wed_model
 
 ## Calculate the effect size -----
@@ -61,10 +65,12 @@ df_alcohol <- subset(df, subset = drug == "Alcohol")
 df_ecstasy <- subset(df, subset = drug == "Ecstasy")
 
 ## Build the models -----
-alcohol_model <- wilcox.test(df_alcohol$wedsBDI, df_alcohol$sundayBDI, paired = TRUE, correct = FALSE)
+alcohol_model <- wilcox.test(df_alcohol$wedsBDI, df_alcohol$sundayBDI, 
+                             paired = TRUE, correct = FALSE)
 alcohol_model
 
-ecstasy_model <- wilcox.test(df_ecstasy$wedsBDI, df_ecstasy$sundayBDI, paired = TRUE, correct = FALSE)
+ecstasy_model <- wilcox.test(df_ecstasy$wedsBDI, df_ecstasy$sundayBDI, 
+                             paired = TRUE, correct = FALSE)
 ecstasy_model
 
 ## Calculate the effect size -----
@@ -83,7 +89,8 @@ df <- read.delim("~/UNLV-MIS-761/data/Soya.dat", header = TRUE)
 
 ## Build the model -----
 ## kruskal.test() general form
-## newModel <- kruskal.test(outcome ~ predictor, data = dataFrame, na.action = "an.action")
+## newModel <- kruskal.test(outcome ~ predictor, data = dataFrame, 
+##                          na.action = "an.action")
 
 kruskal.test(Sperm ~ Soya, data = df)
 
