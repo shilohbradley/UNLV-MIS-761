@@ -10,7 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(ggplot2)
-# library(here)
 ```
 
 ```{r load_data}
@@ -39,6 +38,10 @@ color.hist +
 
 ```
 
+```{r}
+ggplot(df, aes(x = gender, fill = Winner)) +
+  geom_bar()
+```
 
 ```{r reach_analysis}
 # Question: Does the fighter with the longer reach win more frequently?
@@ -142,70 +145,4 @@ reach_gender.model <- update(diff.model, .~. + gender)
 summary(diff.model)
 summary(reach_gender.model)
 anova(diff.model, reach_gender.model)
-
-
-```
-
-```{r}
-```
-
-```{r}
-str(df)
-```
-
-```{r}
-ggplot(df, aes(x = gender, fill = Winner)) +
-  geom_bar()
-```
-```{r}
-df %>%
-  select(gender, Winner) %>%
-  dplyr::summarise(`% Win` = n())
-=======
----
-title: "UFC Statistics"
-author: "Team #5"
-date: "7/24/2020"
-output: pdf_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
-library(dplyr)
-library(ggplot2)
-library(here)
-```
-
-```{r}
-df <- read.csv("~/UNLV-MIS-761/ufc-master.csv")
-```
-
-```{r}
-head(df)
-```
-
-```{r}
-names(df)
-```
-
-```{r}
-summary(df)
-```
-
-```{r}
-str(df)
-```
-
-```{r}
-ggplot(df, aes(x = gender, fill = Winner)) +
-  geom_bar() +
-  scale_fill_manual(values = c("blue", "red"))
-```
-```{r Win Percentages}
-df %>%
-  select(gender, Winner) %>%
-  group_by(gender, Winner) %>%
-  dplyr::summarise(`# of Wins` = n()) %>%
-  ungroup()
 ```
