@@ -14,7 +14,7 @@ library(here)
 ```
 
 ```{r}
-df <- read.csv(here("UNLV-MIS-761/ufc-master.csv"))
+df <- read.csv("~/UNLV-MIS-761/ufc-master.csv")
 ```
 
 ```{r}
