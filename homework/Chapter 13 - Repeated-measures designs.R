@@ -8,14 +8,17 @@
 ## Install packages -----
 # install.packages(c("ez", "multcomp", "nlme", "pastecs", "reshape"))
 # install.packages("WRS", repos = "http://R-Forge.R-project.org")
+# install.packages(c("psycho", "lmer")) ## From Dr. Hardin's example
 
 ## Load packages -----
 library(ez)
 library(ggplot2)
 library(here)
+library(lmer)
 library(multcomp)
 library(nlme)
 library(pastecs)
+library(psycho) ## Package has been moved to "easystats"
 library(reshape)
 library(WRS)
 
@@ -36,18 +39,14 @@ df_long$Animal <- factor(df_long$Animal,
                                     "Fish Eye", "Witchetty Grub"))
 df_long <- df_long[order(df_long$Participant),]
 
-## gl() general form:
-## factor <- gl(number of levels, cases in each level, total cases, 
-##              labels = c("label1", "label2", ...))
+## Explore the data -----
+ggplot(df_long, aes(x = Animal, y = Retch)) +
+  stat_summary(fun.y = mean, geom = "bar", fill = "white", color = "black") +
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange") +
+  labs(x = "Type of Animal Eaten",
+       y = "Mean Time to Retch (seconds)")  
 
-Participant <- gl(8, 4, labels = c("P1", "P2", "P3", "P4", 
-                                   "P5", "P6", "P7", "P8"))
-Animal <- gl(4, 1, 32, labels = c("Stick Insect", "Kangaroo Testicle", 
-                                  "Fish Eye", "Witchetty Grub"))
-Retch <- c(8, 7, 1, 6, 9, 5, 2, 5, 6, 2, 3, 8, 5, 3, 1, 9, 8, 
-           4, 5, 8, 7, 5, 6, 7, 10, 2, 7, 2, 12, 6, 8, 1)
-
-df_long <- data.frame(Participant, Animal, Retch)
+by(df_long$Retch, df_long$Animal, stat.desc)
 
 ## Choosing contrasts -----
 PartvsWhole <- c(1, -1, -1, 1)
@@ -67,16 +66,17 @@ df_long$Animnal
 
 df_model <- ezANOVA(data = df_long, dv = .(Retch), wid = .(Participant), 
                     within = .(Animal), detailed = TRUE, type = 3)
-df_model
+df_model ## Sphericity is violated (great example of how arbitrary p = 0.05 is)
 
 pairwise.t.test(df_long$Retch, df_long$Animal, paired = TRUE, 
                 p.adjust.method = "bonferroni")
 
 ## Multilevel approach -----
-## General form:
+## aov() general form:
 ## newModel <- aov(outcome ~ predictor, data = dataFrame)
 
-df_model <- aov(Retch ~ Animal, data = df_long)
+## Can't use this because it assumes independence
+# df_model <- aov(Retch ~ Animal, data = df_long) 
 
 ## lme() general form:
 ## newModel <- lme(outcome ~ predictor(s), random = random effects, 
@@ -98,6 +98,9 @@ confint(postHocs)
 
 
 ## Robust one-way repeated-measures ANOVA -----
+## Be skeptical of this section.
+## Things may not be as accurate as we would expect since the packages
+## can change over time and aren't always vetted.
 dt <- df[, -c(1)]
 dt
 
@@ -121,6 +124,12 @@ rcontrast(3.149752, 21)
 rcontrast(-0.101237, 21)
 rcontrast(-1.923500, 21)
 
+## Dr. Hardin's tips for mixed models -----
+summary(aov(Retch ~ Animal + Participant/Animal, data = df_long))
+fit <- lmer(Retch ~ Animal + (1|Participant), data = df_long)
+anova(fit)
+print(fit)
+
 ##################################################
 ## FACTORIAL REPEATED-MEASURES DESIGNS          ##
 ##################################################
@@ -137,11 +146,16 @@ df_long <- melt(attitudeData, id = "participant",
 names(df_long) <- c("participant", "groups", "attitude")
 
 df_long$drink <- gl(3, 60, labels = c("Beer", "Wine", "Water"))
-df_long$imagery <- gl(3,20, 180, labels = c("Positive", "Negative", "Neutral"))
+df_long$imagery <- gl(3, 20, 180, labels = c("Positive", "Negative", "Neutral"))
 
-by(df_long$attitude, 
-   list(df_long$drink, df_long$imagery), 
-   stat.desc, basic = FALSE)
+## Explore the data ----
+ggplot(df_long, aes(x = drink, y = attitue)) +
+  geom_boxplot() +
+  facet_wrap(~imagery, nrow = 1)
+
+## Descriptive stats -----
+options(digits = 3)
+by(df_long$attitude, list(df_long$drink, df_long$imagery), stat.desc, basic = FALSE)
 
 ## Choosing contrasts -----
 AlcoholvsWater <- c(1, 1, -2)
@@ -164,7 +178,7 @@ df_model
 pairwise.t.test(df_long$attitude, df_long$groups, paired = TRUE, 
                 p.adjust.method = "bonferroni")
 
-## Factorial repeated-measures designs as a GLM
+## Factorial repeated-measures designs as a GLM -----
 baseline <- lme(attitude ~ 1, random = ~1|participant/drink/imagery, 
                 data = df_long, method = "ML")
 baseline <- lme(attitude ~ drink, random = ~1|participant/drink/imagery, 

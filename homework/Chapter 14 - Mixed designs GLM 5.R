@@ -6,8 +6,7 @@
 ##################################################
 
 ## Install packages -----
-# install.packages(c("ez", "multcomp", "nlme", "pastecs", "reshape"))
-# install.packages("WRS", repos = "http://R-Forge.R-project.org")
+## No new packages needed
 
 ## Load packages -----
 library(compute.es)
@@ -50,6 +49,15 @@ df_speed <- df_speed[order(df_speed$participant), ]
 by(speedData$dateRating, list(speedData$looks, speedData$personality), 
    stat.desc, basic = FALSE)
 
+## Explore the data -----
+ggplot(df_speed, aes(x = looks, y = dateRating, color = personality)) +
+  geom_boxplot() +
+  labs(x = "Attractiveness", y = "Mean Rating of Date", color = "charisma") +
+  facet_wrap(~gender)
+
+by(df_speed$dateRating, list(df_speed$looks, df_speed$personality, df_speed$gender),
+   stat.desc, basic = FALSE)
+
 ## Choosing contrasts -----
 SomevsNone <- c(1, 1, -2)
 HivsAv <- c(1, -1, 0)
@@ -63,7 +71,12 @@ contrasts(df_speed$looks) <- cbind(AttractivevsUgly, AttractvsAv)
 speed_model <- ezANOVA(data = df_speed, dv = .(dateRating), wid = .(participant),
                        between = .(gender), within = .(looks, personality),
                        type = 3, detailed = TRUE)
-speed_model
+speed_model ## Sphericity is satisfied
+
+## Different options to help make the model tables more readable
+options(scipen = 999)
+options(digits = 3)
+options(scipen = 26, digits = 3)
 
 ## Choosing contrasts -----
 ## Use same contrasts a mixed ANOVA model, but change this one
@@ -99,6 +112,11 @@ anova(baseline, looks_model, personality_model, gender_model, looks_gender,
 
 summary(speed_date_model)
 
+ggplot(df_speed, aes(x = gender, y = dateRating)) +
+  stat_summary(fun.y = mean, geom = "bar", fill = "white", color = "black") +
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange") +
+  labs(x = "Gender", y = "Mean Rating of Date")
+
 t <- summary(speed_date_model)$tTable[ ,4]
 df <- summary(speed_date_model)$tTable[ ,3]
 
@@ -107,13 +125,14 @@ rcontrast(3.85315, 108)
 rcontrast(-7.53968, 108)
 rcontrast(-0.97891, 108)
 
-
-
 ##################################################
 ## ROBUST ANALYSIS FOR MIXED DESIGNS            ##
 ##################################################
 
+## Read in data -----
 df <- read.delim("~/UNLV-MIS-761/data/ProfilePicture.dat", header = TRUE)
+
+## Manipulate data -----
 names(df) <- c("case", "relationship_status", "With Man", "Alone")
 df$row <- c(1:17, 1:23)
 
@@ -127,11 +146,12 @@ df <- cast(df_melt, row ~ relationship_status + profile_picture,
 df$row <- NULL
 df
 
-## tsplit() general form:
+## Build the models -----
+## tsplit() general form
 ## tsplit(levels of factor A, levels of factor B, tr = 0.2)
 tsplit(2, 2, df)
 
-## sppba() general form:s
+## sppba() general form
 ## sppba(levels of factor A, levels of factor B, data, est = mom, nboot = 2000)
 sppba(2, 2, df, est = mom, nboot = 2000)
 sppbb(2, 2, df, est = mom, nboot = 2000)

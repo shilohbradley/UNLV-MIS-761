@@ -14,7 +14,9 @@ library(ggplot2)
 
 ```{r load_data}
 df <- read.csv('ufc-master.csv')
+```
 
+```{r basic summaries, eval = FALSE}
 head(df)
 
 names(df)
