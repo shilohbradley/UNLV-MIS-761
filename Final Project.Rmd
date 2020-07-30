@@ -8,49 +8,106 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(car)
 library(dplyr)
 library(ggplot2)
+library(reshape)
+library(pastecs)
+library(gmodels)
 # library(here)
 ```
+
+Link to the data set: https://www.kaggle.com/mdabbert/ultimate-ufc-dataset?select=ufc-master.csv
 
 ```{r load_data}
 df <- read.csv('ufc-master.csv')
 
-head(df)
-
-names(df)
-
-summary(df)
+# head(df)
+# names(df)
+# summary(df)
 ```
 
-```{r color_analysis}
-# Question: Does one color have an advantage over the other? Does it change with gender?
+# Inquiry 1: Does one color have an advantage over the other? Does gender make a difference?
+
+```{r color_analysis_1}
 
 # Get the data
 color <- df[,c('Winner', 'gender')]
 
-# Plot the graph
-color.hist <- ggplot(color, aes(x = Winner))
-color.hist +
-  geom_histogram(stat = 'count', fill = c('Blue', 'Red'))
-
-
-# Test of significance ?
+# Plot the graph without gender
+colorOnly.bar <- ggplot(color, aes(x = Winner))
+colorOnly.bar +
+  geom_bar(fill = c('Blue', 'Red'))
 
 ```
 
+Based on the graph, it appears that red has a large advantage over blue. (Question: How are colors chosen? At random? Based on rank?)
+
+We can break this down and look at the gender splits.
+
+```{r color_analysis_2}
+# Plot the graph with gender
+colorGender.table <- with(color, table(Winner, gender))
+colorGender.bar <- barplot(colorGender.table, beside = TRUE, legend = TRUE)
+
+# Calculate win percentages
+print(paste('Overall Red Wins: ',
+            nrow(subset(color, Winner == 'Red'))))
+print(paste('Overall Blue Wins: ',
+            nrow(subset(color, Winner == 'Blue'))))
+
+print(paste('Overall Red Win Pct: ',
+            round( 100 * nrow(subset(color, Winner == 'Red')) / nrow(color), 2 )))
+print(paste('Overall Blue Win Pct: ',
+            round( 100 * nrow(subset(color, Winner == 'Blue')) / nrow(color), 2 )))
+
+print(paste('Overall Male Red Wins: ',
+            nrow(subset(color, Winner == 'Red' & gender == 'MALE'))))
+print(paste('Overall Male Blue Wins: ',
+            nrow(subset(color, Winner == 'Blue' & gender == 'MALE'))))
+
+print(paste('Overall Male Red Win Pct: ',
+            round( 100 * nrow(subset(color, Winner == 'Red' & gender == 'FEMALE')) /
+                     nrow(subset(color, gender == 'FEMALE')), 2)))
+print(paste('Overall Male Blue Win Pct: ',
+            round( 100 * nrow(subset(color, Winner == 'Blue' & gender == 'FEMALE')) /
+                     nrow(subset(color, gender == 'FEMALE')), 2 )))
+
+print(paste('Overall Female Red Wins: ',
+            nrow(subset(color, Winner == 'Red' & gender == 'FEMALE'))))
+print(paste('Overall Female Blue Wins: ',
+            nrow(subset(color, Winner == 'Blue' & gender == 'FEMALE'))))
+
+print(paste('Overall Female Red Win Pct: ',
+            round( 100 * nrow(subset(color, Winner == 'Red' & gender == 'FEMALE')) /
+                     nrow(subset(color, gender == 'FEMALE')), 2 )))
+print(paste('Overall Female Blue Win Pct: ',
+            round( 100 * nrow(subset(color, Winner == 'Blue' & gender == 'FEMALE')) /
+                     nrow(subset(color, gender == 'FEMALE')), 2 )))
+
+```
+
+I'm not sure what test to run here to show that color is significant.
+
+# Inquiry 2: Does a reach advantage lead to more wins?
 
 ```{r reach_analysis}
-# Question: Does the fighter with the longer reach win more frequently?
-
 # Create a smaller data frame
-reach <- df[,c('Winner', 'B_Reach_cms', 'R_Reach_cms')]
+reach <- df[,c('Winner', 'gender', 'B_Reach_cms', 'R_Reach_cms')]
 
 # Calculate the difference in reach (positive = blue advantage)
 reach$Diff <- reach$B_Reach_cms - reach$R_Reach_cms
 
-# There is an outlier that makes no sense, so remove it
+# Plot the reach differences
+reach.plot <- ggplot(reach, aes(x = Diff))
+reach.plot +
+  geom_histogram()
+
+# There is an outlier that makes no sense, so remove it and replot
 reach <- reach[reach$Diff > -50,]
+reach.plot <- ggplot(reach, aes(x = Diff))
+reach.plot +
+  geom_histogram(binwidth = 2)
 
 # Remove all cases where the players had equal reach
 reach <- subset(reach, !(Diff == 0))
@@ -88,72 +145,147 @@ summary(reach.model)
 
 ```
 
+There is a statistically significant correlation between the winner and having a reach advantage. (Note: Need to determine how to interpret the 0.02 coefficient. Is that a 2% increase in winning percentage per 1 cm of reach? That seems like a lot.)
+
+## Check to see how gender affects this
+
 ```{r reach_gender_analysis}
-# Question: Does gender impact whether the fighter with the longer reach will win more frequently?
-
-# Create a smaller data frame
-reach_gender <- df[,c('Winner', 'gender', 'B_Reach_cms', 'R_Reach_cms')]
-
-# Convert gender into levels
-reach_gender$gender <- as.factor(reach_gender$gender)
-
-# Calculate the difference in reach (positive = blue advantage)
-reach_gender$Diff <- reach_gender$B_Reach_cms - reach_gender$R_Reach_cms
-
-# There is an outlier that makes no sense, so remove it
-reach_gender <- reach_gender[reach_gender$Diff > -50,]
-
-# There is an outlier that makes no sense, so remove it
-reach_gender <- reach_gender[reach$Diff > -50,]
-
-# Remove all cases where the players had equal reach
-reach_gender <- subset(reach_gender, !(Diff == 0))
-
-# Identify the fighter with the longer reach
-reach_gender$Advantage <-
-  case_when(
-    reach_gender$Diff > 0 ~ 'Blue',
-    reach_gender$Diff < 0 ~ 'Red'
-  )
-
-# Identify if the advantaged fighter won
-reach_gender$AdWin <-
-  case_when(
-    reach_gender$Advantage == reach_gender$Winner ~ 'Win',
-    reach_gender$Advantage != reach_gender$Winner ~ 'Lose'
-  )
-
-reach_gender$AdWin <- as.factor(reach_gender$AdWin)
-
-# Take the absolute value of the difference
-reach_gender$AbsDiff <- abs(reach_gender$Diff)
 
 # Plot the data
-reach_gender.hist <- ggplot(reach_gender, aes(x = AbsDiff, color = gender))
+reach_gender.hist <- ggplot(reach, aes(x = AbsDiff, color = gender))
 reach_gender.hist +
   geom_histogram(binwidth = 2, aes(fill = gender)) +
   facet_grid(AdWin ~ gender)
 
 # Create the logistic regression
-diff.model <- glm(AdWin ~ AbsDiff, data = reach_gender, family = binomial())
-reach_gender.model <- update(diff.model, .~. + gender)
+reach_diff.model <- glm(AdWin ~ AbsDiff, data = reach, family = binomial())
+reach_gender.model <- update(reach_diff.model, .~. + gender)
 
 # Display summary
-summary(diff.model)
+summary(reach_diff.model)
 summary(reach_gender.model)
-anova(diff.model, reach_gender.model)
+anova(reach_diff.model, reach_gender.model)
 
 
 ```
 
-```{r}
+It appears that adding gender does not add much to the model.
+
+# Inquiry 3: Does height have an advantage?
+
+```{r height_analysis}
+# Create a smaller data frame
+height <- df[,c('Winner', 'B_Height_cms', 'R_Height_cms')]
+
+# Calculate the difference in reach (positive = blue advantage)
+height$Diff <- height$B_Height_cms - height$R_Height_cms
+
+# Remove all cases where the players had equal reach
+height <- subset(height, !(Diff == 0))
+
+# Identify the fighter with the longer reach
+height$Advantage <-
+  case_when(
+    height$Diff > 0 ~ 'Blue',
+    height$Diff < 0 ~ 'Red'
+  )
+
+# Identify if the advantaged fighter won
+height$AdWin <-
+  case_when(
+    height$Advantage == height$Winner ~ 'Win',
+    height$Advantage != height$Winner ~ 'Lose'
+  )
+
+height$AdWin <- as.factor(height$AdWin)
+
+# Take the absolute value of the difference
+height$AbsDiff <- abs(height$Diff)
+
+# Plot the data
+height.hist <- ggplot(height, aes(x = AbsDiff))
+height.hist +
+  geom_histogram(binwidth = 2) +
+  facet_wrap(~ AdWin, ncol = 1)
+
+
+
+# Create the logistic regression
+height.model <- glm(AdWin ~ AbsDiff, data = height, family = binomial())
+
+# Display summary
+summary(height.model)
+
+```
+
+There is no significant advantage.
+
+# Inquiry 4: What about combining height and reach?
+
+```{r height_reach_analysis_1}
+# Create a smaller data frame
+height_reach <- df[,c('Winner', 'B_Reach_cms', 'R_Reach_cms', 'B_Height_cms', 'R_Height_cms')]
+
+# Calculate the difference in height and reach relative to Blue
+height_reach$HDiff <- height_reach$B_Height_cms - height_reach$R_Height_cms
+height_reach$RDiff <- height_reach$B_Reach_cms - height_reach$R_Reach_cms
+
+# Draw a scatterplot of the differences
+height_reach.scatter <- ggplot(height_reach, aes(x = RDiff, y = HDiff))
+height_reach.scatter +
+  geom_point() +
+  geom_smooth(method = 'lm')
+
+# Remove bad data point and replot
+height_reach <- height_reach[abs(height_reach$RDiff) < 50,]
+height_reach.scatter <- ggplot(height_reach, aes(x = RDiff, y = HDiff))
+height_reach.scatter +
+  geom_point() +
+  geom_smooth(method = 'lm')
+```
+
+This scatterplot only shows that the height and reach advantages have a correlation with each other, but it does not say anything about wins and losses.
+
+```{r height_reach_analysis_2}
+# Calculate the mean advantages for the winner
+stat.desc(cbind(height_reach$HDiff, height_reach$RDiff))
+
+```
+
+Blue does not appear to have any average advantage/disadvantage with respect to height and reach.
+
+```{r height_reach_analysis_3}
+# Create a column that indicates whether blue wins/loses
+height_reach$BlueWin <-
+  case_when(
+    height_reach$Winner == 'Blue' ~ 'Yes',
+    height_reach$Winner == 'Red' ~ 'No'
+  )
+height_reach$BlueWin <- as.factor(height_reach$BlueWin)
+
+# Create a logistic regression
+height_reach.model <- glm(BlueWin ~ HDiff * RDiff, data = height_reach, family = binomial())
+
+summary(height_reach.model)
+```
+
+As before, height does not appear to have an impact, but reach does.
+
+# Inquiry 5: Compare stances
+
+```{r stance_analysis}
+# Create a smaller data frame
+stance <- df[,c('Winner', 'B_Stance', 'R_Stance')]
+
+# Only keep matches where the stances are different
+stance <- subset(stance, !(B_Stance == R_Stance))
+
 ```
 
 ```{r}
-str(df)
-```
+# Height, Weight, Age, Experience (# of matches), Wins, Stance
 
-```{r}
+
 ggplot(df, aes(x = gender, fill = Winner)) +
   geom_bar()
 ```
