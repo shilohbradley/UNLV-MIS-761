@@ -299,6 +299,8 @@ df %>%
 
 # Inquiry 6: Does a younger age lead to more wins?
 
+# Inquiry #: Does a younger age lead to more wins?
+
 ```{r age_analysis}
 # Create a smaller data frame
 age <- df[,c('Winner', 'B_age', 'R_age', 'age_dif')]
@@ -308,11 +310,11 @@ age.plot +
   geom_histogram()
 # Remove all cases where the players had equal age
 age <- subset(age, !(age_dif == 0))
-# Identify the fighter with the younger age (advantage = blue)
+# Identify the fighter with the younger age (positive = red advantage)
 age$Advantage <-
   case_when(
-    age$age_dif < 0 ~ 'Blue',
-    age$age_dif > 0 ~ 'Red'
+    age$age_dif > 0 ~ 'Red',
+    age$age_dif < 0 ~ 'Blue'
   )
 # Identify if the advantaged fighter won
 age$AdWin <-
