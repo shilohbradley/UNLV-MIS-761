@@ -333,3 +333,4 @@ age.model <- glm(AdWin ~ AbsDiff, data = age, family = binomial())
 # Display summary
 summary(age.model)
 ```
+There is a statistically significant correlation between the winner and having an age advantage (younger age).
