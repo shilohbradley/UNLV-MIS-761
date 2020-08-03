@@ -294,3 +294,42 @@ df %>%
   select(gender, Winner) %>%
   dplyr::summarise(`% Win` = n())
 ```
+
+
+
+# Inquiry 6: Does a younger age lead to more wins?
+
+```{r age_analysis}
+# Create a smaller data frame
+age <- df[,c('Winner', 'B_age', 'R_age', 'age_dif')]
+# Plot the age differences
+age.plot <- ggplot(age, aes(x = age_dif))
+age.plot +
+  geom_histogram()
+# Remove all cases where the players had equal age
+age <- subset(age, !(age_dif == 0))
+# Identify the fighter with the younger age (advantage = blue)
+age$Advantage <-
+  case_when(
+    age$age_dif < 0 ~ 'Blue',
+    age$age_dif > 0 ~ 'Red'
+  )
+# Identify if the advantaged fighter won
+age$AdWin <-
+  case_when(
+    age$Advantage == age$Winner ~ 'Win',
+    age$Advantage != age$Winner ~ 'Lose'
+  )
+age$AdWin <- as.factor(age$AdWin)
+# Take the absolute value of the difference
+age$AbsDiff <- abs(age$age_dif)
+# Plot the data
+age.hist <- ggplot(age, aes(x = AbsDiff))
+age.hist +
+  geom_histogram(binwidth = 2) +
+  facet_wrap(~ AdWin, ncol = 1)
+# Create the logistic regression
+age.model <- glm(AdWin ~ AbsDiff, data = age, family = binomial())
+# Display summary
+summary(age.model)
+```
